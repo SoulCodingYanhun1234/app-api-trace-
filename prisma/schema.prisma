@@ -1,0 +1,741 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique @db.VarChar(64)
+  password_hash String    @db.VarChar(255)
+  real_name     String    @db.VarChar(64)
+  email         String?   @db.VarChar(128)
+  phone         String?   @db.VarChar(32)
+  role          Int       @default(2)
+  status        Int       @default(1)
+  permissions   Json?
+  avatar        String?   @db.VarChar(255)
+  last_login_at DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  @@map("admins")
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  role_code   String   @unique @db.VarChar(64)
+  role_name   String   @db.VarChar(80)
+  description String?  @db.VarChar(255)
+  status      Int      @default(1)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id              Int      @id @default(autoincrement())
+  permission_code String   @unique @db.VarChar(120)
+  permission_name String   @db.VarChar(120)
+  module          String?  @db.VarChar(80)
+  description     String?  @db.VarChar(255)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  role_id    Int
+  created_at DateTime @default(now())
+
+  @@unique([user_id, role_id])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id            Int      @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+  created_at    DateTime @default(now())
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model Product {
+  id               Int       @id @default(autoincrement())
+  product_code     String    @unique @db.VarChar(64)
+  product_name     String    @db.VarChar(128)
+  batch_no         String?   @db.VarChar(64)
+  category         String?   @db.VarChar(64)
+  brand            String?   @db.VarChar(64)
+  specification    String?   @db.VarChar(128)
+  unit             String?   @db.VarChar(32)
+  production_date  DateTime? @db.Date
+  production_place String?   @db.VarChar(128)
+  manufacturer     String?   @db.VarChar(128)
+  shelf_life       String?   @db.VarChar(64)
+  description      String?
+  image_url        String?   @db.VarChar(255)
+  extra_fields     Json?
+  status           Int       @default(1)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([manufacturer])
+  @@index([batch_no])
+  @@map("products")
+}
+
+model Manufacturer {
+  id                 Int      @id @default(autoincrement())
+  manufacturer_code  String?  @unique @db.VarChar(64)
+  manufacturer_name  String   @db.VarChar(128)
+  company_name       String?  @db.VarChar(128)
+  social_credit_code String?  @db.VarChar(128)
+  legal_person       String?  @db.VarChar(64)
+  contact_name       String?  @db.VarChar(64)
+  contact_phone      String?  @db.VarChar(32)
+  contact_email      String?  @db.VarChar(128)
+  province           String?  @db.VarChar(64)
+  city               String?  @db.VarChar(64)
+  address            String?  @db.VarChar(255)
+  business_license   String?  @db.VarChar(255)
+  production_license String?  @db.VarChar(128)
+  quality_report     Json?
+  status             Int      @default(1)
+  remark             String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@index([status])
+  @@index([manufacturer_name])
+  @@index([company_name])
+  @@index([province, city])
+  @@map("manufacturers")
+}
+
+model Agent {
+  id               Int      @id @default(autoincrement())
+  agent_code       String?  @unique @db.VarChar(64)
+  agent_name       String?  @db.VarChar(128)
+  contact_name     String?  @db.VarChar(64)
+  contact_phone    String?  @db.VarChar(32)
+  contact_email    String?  @db.VarChar(128)
+  province         String?  @db.VarChar(64)
+  city             String?  @db.VarChar(64)
+  district         String?  @db.VarChar(64)
+  address          String?  @db.VarChar(255)
+  business_license String?  @db.VarChar(128)
+  level            Int?
+  parent_id        Int?
+  status           Int      @default(1)
+  remark           String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([status])
+  @@index([province, city, district])
+  @@map("agents")
+}
+
+model ProductRegion {
+  id                Int       @id @default(autoincrement())
+  product_id        Int?
+  product_code      String?   @db.VarChar(64)
+  product_name      String?   @db.VarChar(128)
+  brand             String?   @db.VarChar(64)
+  category          String?   @db.VarChar(64)
+  province_code     String?   @db.VarChar(16)
+  city_code         String?   @db.VarChar(16)
+  province_name     String?   @db.VarChar(64)
+  city_name         String?   @db.VarChar(64)
+  region_group      String?   @db.VarChar(128)
+  warehouse         String?   @db.VarChar(128)
+  distributor       String?   @db.VarChar(128)
+  agent_id          Int?
+  authorized_status String?   @default("正常授权") @db.VarChar(64)
+  code_rule         String?   @db.VarChar(128)
+  codes             Json?
+  scan_count        Int       @default(0)
+  last_scan_code    String?   @db.VarChar(128)
+  last_scan_at      DateTime?
+  remark            String?
+  status            Int       @default(1)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@unique([product_code, province_name, city_name])
+  @@index([product_id])
+  @@index([product_code])
+  @@index([province_code, city_code])
+  @@index([province_name, city_name])
+  @@index([agent_id])
+  @@index([status])
+  @@map("product_regions")
+}
+
+model Certificate {
+  id                Int       @id @default(autoincrement())
+  cert_name         String?   @db.VarChar(128)
+  cert_type         String?   @db.VarChar(64)
+  product_id        Int?
+  issuing_authority String?   @db.VarChar(128)
+  issue_date        DateTime? @db.Date
+  expiry_date       DateTime? @db.Date
+  cert_image        String?   @db.VarChar(255)
+  cert_file         String?   @db.VarChar(255)
+  status            Int       @default(1)
+  remark            String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  @@index([product_id])
+  @@index([status])
+  @@map("certificates")
+}
+
+model ProcessRecord {
+  id              Int       @id @default(autoincrement())
+  product_id      Int?
+  batch_no        String?   @db.VarChar(64)
+  process_type    String?   @db.VarChar(64)
+  process_name    String?   @db.VarChar(128)
+  process_content String?
+  process_data    Json?
+  operator        String?   @db.VarChar(64)
+  location        String?   @db.VarChar(128)
+  process_time    DateTime?
+  status          Int       @default(1)
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@index([product_id])
+  @@index([batch_no])
+  @@map("process_records")
+}
+
+model AntiFakeCode {
+  id                      Int       @id @default(autoincrement())
+  product_id              Int?
+  code                    String    @unique @db.VarChar(128)
+  code_hash               String?   @unique @db.VarChar(64)
+  code_ciphertext         Bytes?    @db.VarBinary(512)
+  code_iv                 Bytes?    @db.Binary(12)
+  code_tag                Bytes?    @db.Binary(16)
+  code_key_id             String?   @db.VarChar(32)
+  prefix                  String?   @db.VarChar(32)
+  serial_number           String?   @db.VarChar(32)
+  checksum                String?   @db.VarChar(8)
+  parent_code             String?   @db.VarChar(128)
+  packaging_level         String?   @db.VarChar(32)
+  risk_level              String?   @db.VarChar(32)
+  anti_channeling_enabled Boolean   @default(true)
+  batch_no                String?   @db.VarChar(64)
+  status                  Int       @default(0)
+  query_count             Int       @default(0)
+  box_id                  Int?
+  box_no                  String?   @db.VarChar(128)
+  product_code            String?   @db.VarChar(64)
+  product_name            String?   @db.VarChar(128)
+  category                String?   @db.VarChar(64)
+  brand                   String?   @db.VarChar(64)
+  specification           String?   @db.VarChar(128)
+  unit                    String?   @db.VarChar(32)
+  production_place        String?   @db.VarChar(128)
+  manufacturer            String?   @db.VarChar(128)
+  province_code           String?   @db.VarChar(16)
+  city_code               String?   @db.VarChar(16)
+  province_name           String?   @db.VarChar(64)
+  city_name               String?   @db.VarChar(64)
+  region_group            String?   @db.VarChar(128)
+  warehouse               String?   @db.VarChar(128)
+  distributor             String?   @db.VarChar(128)
+  agent_id                Int?
+  agent_name              String?   @db.VarChar(128)
+  company_name            String?   @db.VarChar(128)
+  box_bound_at            DateTime?
+  ownership_at            DateTime?
+  activated_at            DateTime?
+  expires_at              DateTime? @db.Date
+  first_query_at          DateTime?
+  last_query_at           DateTime?
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
+
+  @@index([product_id])
+  @@index([batch_no])
+  @@index([status])
+  @@index([expires_at])
+  @@index([box_id])
+  @@index([box_no])
+  @@index([product_code])
+  @@index([manufacturer])
+  @@index([province_name, city_name])
+  @@index([agent_id])
+  @@index([code_hash])
+  @@index([code_key_id])
+  @@index([parent_code])
+  @@index([packaging_level])
+  @@map("anti_fake_codes")
+}
+
+model TraceRecord {
+  id               Int       @id @default(autoincrement())
+  product_id       Int?
+  trace_no         String?   @unique @db.VarChar(128)
+  anti_fake_code   String?   @db.VarChar(128)
+  batch_no         String?   @db.VarChar(64)
+  production_date  DateTime? @db.Date
+  expiry_date      DateTime? @db.Date
+  production_place String?   @db.VarChar(128)
+  manufacturer     String?   @db.VarChar(128)
+  trace_chain      Json?
+  status           Int       @default(1)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@index([product_id])
+  @@index([anti_fake_code])
+  @@index([batch_no])
+  @@map("trace_records")
+}
+
+model Box {
+  id                    Int       @id @default(autoincrement())
+  product_id            Int?
+  box_no                String?   @unique @db.VarChar(128)
+  batch_no              String?   @db.VarChar(64)
+  box_capacity          Int?
+  box_spec              String?   @db.VarChar(128)
+  box_type              String?   @db.VarChar(64)
+  product_code          String?   @db.VarChar(64)
+  product_name          String?   @db.VarChar(128)
+  category              String?   @db.VarChar(64)
+  brand                 String?   @db.VarChar(64)
+  specification         String?   @db.VarChar(128)
+  unit                  String?   @db.VarChar(32)
+  production_place      String?   @db.VarChar(128)
+  manufacturer          String?   @db.VarChar(128)
+  province_code         String?   @db.VarChar(16)
+  city_code             String?   @db.VarChar(16)
+  province_name         String?   @db.VarChar(64)
+  city_name             String?   @db.VarChar(64)
+  region_group          String?   @db.VarChar(128)
+  warehouse             String?   @db.VarChar(128)
+  distributor           String?   @db.VarChar(128)
+  agent_id              Int?
+  agent_name            String?   @db.VarChar(128)
+  company_name          String?   @db.VarChar(128)
+  packing_address       String?   @db.VarChar(255)
+  authorization_address String?   @db.VarChar(255)
+  authorization_level   String?   @db.VarChar(32)
+  authorization_source  String?   @db.VarChar(64)
+  codes                 Json?
+  status                Int       @default(0)
+  ownership_at          DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  @@index([product_id])
+  @@index([batch_no])
+  @@index([status])
+  @@index([product_code])
+  @@index([province_name, city_name])
+  @@index([agent_id])
+  @@map("boxes")
+}
+
+model Shipment {
+  id                    Int      @id @default(autoincrement())
+  shipment_no           String?  @unique @db.VarChar(128)
+  batch_no              String?  @db.VarChar(64)
+  agent_id              Int?
+  box_ids               Json?
+  logistics_company     String?  @db.VarChar(128)
+  logistics_no          String?  @db.VarChar(128)
+  sender                String?  @db.VarChar(64)
+  sender_address        String?  @db.VarChar(255)
+  receiver              String?  @db.VarChar(64)
+  receiver_phone        String?  @db.VarChar(32)
+  receiver_address      String?  @db.VarChar(255)
+  province_code         String?  @db.VarChar(16)
+  city_code             String?  @db.VarChar(16)
+  province_name         String?  @db.VarChar(64)
+  city_name             String?  @db.VarChar(64)
+  region_group          String?  @db.VarChar(128)
+  warehouse             String?  @db.VarChar(128)
+  distributor           String?  @db.VarChar(128)
+  authorization_address String?  @db.VarChar(255)
+  authorization_level   String?  @db.VarChar(32)
+  authorization_source  String?  @db.VarChar(64)
+  status                Int      @default(0)
+  remark                String?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  @@index([agent_id])
+  @@index([batch_no])
+  @@index([province_name, city_name])
+  @@index([status])
+  @@map("shipments")
+}
+
+model ReturnOrder {
+  id            Int      @id @default(autoincrement())
+  return_no     String?  @unique @db.VarChar(128)
+  shipment_id   Int?
+  shipment_no   String?  @db.VarChar(128)
+  agent_id      Int?
+  agent_name    String?  @db.VarChar(128)
+  return_codes  Json?
+  return_reason String?  @db.VarChar(255)
+  return_type   Int?
+  status        Int      @default(0)
+  remark        String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([shipment_id])
+  @@index([agent_id])
+  @@index([status])
+  @@map("returns")
+}
+
+model QueryLog {
+  id                Int      @id @default(autoincrement())
+  code              String?  @db.VarChar(128)
+  result            Int?
+  channel           String?  @db.VarChar(64)
+  location          String?  @db.VarChar(128)
+  location_source   String?  @db.VarChar(64)
+  location_verified Boolean  @default(false)
+  ip                String?  @db.VarChar(64)
+  user_agent        String?  @db.VarChar(512)
+  query_count       Int      @default(0)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@index([code])
+  @@index([result])
+  @@index([ip])
+  @@index([code, location_verified, created_at])
+  @@index([created_at])
+  @@map("query_logs")
+}
+
+model RiskEvent {
+  id         Int      @id @default(autoincrement())
+  event_type String   @db.VarChar(64)
+  code       String?  @db.VarChar(128)
+  ip         String?  @db.VarChar(64)
+  device_id  String?  @db.VarChar(128)
+  reason     String?  @db.VarChar(255)
+  payload    Json?
+  status     Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([event_type])
+  @@index([code])
+  @@index([ip])
+  @@map("risk_events")
+}
+
+model AntiChannelingRule {
+  id              Int      @id @default(autoincrement())
+  rule_code       String   @unique @db.VarChar(64)
+  rule_name       String   @db.VarChar(128)
+  rule_type       String   @db.VarChar(64)
+  enabled         Boolean  @default(true)
+  severity        Int      @default(2)
+  threshold       Int?
+  window_seconds  Int?
+  config          Json?
+  notify_channels Json?
+  description     String?  @db.VarChar(255)
+  status          Int      @default(1)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@index([rule_type])
+  @@index([enabled, status])
+  @@map("anti_channeling_rules")
+}
+
+model AntiChannelingAlert {
+  id                    Int       @id @default(autoincrement())
+  alert_no              String    @unique @db.VarChar(64)
+  alert_type            String    @db.VarChar(64)
+  severity              Int       @default(2)
+  title                 String?   @db.VarChar(255)
+  code                  String?   @db.VarChar(128)
+  box_no                String?   @db.VarChar(128)
+  shipment_no           String?   @db.VarChar(128)
+  product_id            Int?
+  product_code          String?   @db.VarChar(64)
+  product_name          String?   @db.VarChar(128)
+  agent_id              Int?
+  agent_name            String?   @db.VarChar(128)
+  authorized_region     String?   @db.VarChar(255)
+  authorized_province   String?   @db.VarChar(64)
+  authorized_city       String?   @db.VarChar(64)
+  actual_location       String?   @db.VarChar(255)
+  actual_province       String?   @db.VarChar(64)
+  actual_city           String?   @db.VarChar(64)
+  ip                    String?   @db.VarChar(64)
+  device_id             String?   @db.VarChar(128)
+  user_agent            String?   @db.VarChar(512)
+  scan_time             DateTime?
+  first_seen_at         DateTime  @default(now())
+  last_seen_at          DateTime  @default(now())
+  evidence              Json?
+  notification_channels Json?
+  status                Int       @default(0)
+  handle_result         String?   @db.VarChar(255)
+  handled_by            Int?
+  handled_at            DateTime?
+  remark                String?   @db.VarChar(255)
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  @@index([alert_type])
+  @@index([severity])
+  @@index([status])
+  @@index([code])
+  @@index([box_no])
+  @@index([shipment_no])
+  @@index([agent_id])
+  @@index([actual_province, actual_city])
+  @@index([created_at])
+  @@index([last_seen_at])
+  @@map("anti_channeling_alerts")
+}
+
+model AntiChannelingNotification {
+  id         Int       @id @default(autoincrement())
+  alert_id   Int
+  channel    String    @db.VarChar(32)
+  receiver   String?   @db.VarChar(128)
+  target     String?   @db.VarChar(255)
+  status     Int       @default(0)
+  payload    Json?
+  error      String?   @db.VarChar(255)
+  sent_at    DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@index([alert_id])
+  @@index([channel])
+  @@index([status])
+  @@map("anti_channeling_notifications")
+}
+
+model SystemSetting {
+  id            Int      @id @default(autoincrement())
+  group_key     String   @db.VarChar(80)
+  setting_key   String   @db.VarChar(120)
+  setting_value Json?
+  value_type    String?  @default("json") @db.VarChar(32)
+  remark        String?  @db.VarChar(255)
+  updated_by    Int?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@unique([group_key, setting_key])
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  admin_id   Int?
+  username   String?  @db.VarChar(64)
+  module     String?  @db.VarChar(64)
+  action     String?  @db.VarChar(32)
+  path       String?  @db.VarChar(255)
+  ip         String?  @db.VarChar(64)
+  user_agent String?  @db.VarChar(512)
+  status     Int?
+  created_at DateTime @default(now())
+
+  @@index([admin_id])
+  @@index([module])
+  @@index([created_at])
+  @@map("audit_logs")
+}
+
+model LoginLog {
+  id         Int      @id @default(autoincrement())
+  admin_id   Int?
+  username   String?  @db.VarChar(64)
+  ip         String?  @db.VarChar(64)
+  user_agent String?  @db.VarChar(512)
+  success    Boolean  @default(false)
+  reason     String?  @db.VarChar(255)
+  created_at DateTime @default(now())
+
+  @@index([username])
+  @@index([created_at])
+  @@map("login_logs")
+}
+
+model UploadedFile {
+  id            Int      @id @default(autoincrement())
+  file_name     String   @db.VarChar(255)
+  original_name String?  @db.VarChar(255)
+  mime_type     String?  @db.VarChar(128)
+  size_bytes    Int?
+  storage_path  String   @db.VarChar(500)
+  public_url    String   @db.VarChar(500)
+  category      String?  @db.VarChar(64)
+  created_at    DateTime @default(now())
+
+  @@index([category])
+  @@map("files")
+}
+
+model ProductionBatch {
+  id               Int       @id @default(autoincrement())
+  batch_code       String    @unique @db.VarChar(64)
+  product_id       Int?
+  factory_id       String?   @db.VarChar(64)
+  planned_quantity Int?
+  actual_quantity  Int?
+  production_date  DateTime? @db.Date
+  expiry_date      DateTime? @db.Date
+  status           String?   @default("CREATED") @db.VarChar(32)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@index([product_id])
+  @@index([status])
+  @@map("production_batches")
+}
+
+model ProductionStep {
+  id              Int       @id @default(autoincrement())
+  batch_code      String    @db.VarChar(64)
+  step_type       String    @db.VarChar(64)
+  step_name       String?   @db.VarChar(128)
+  operator_id     String?   @db.VarChar(64)
+  start_time      DateTime?
+  end_time        DateTime?
+  quantity        Int?
+  quality_status  String?   @db.VarChar(32)
+  blockchain_hash String?   @db.VarChar(64)
+  payload         Json?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  @@index([batch_code])
+  @@index([step_type])
+  @@map("production_steps")
+}
+
+model WarehouseInRecord {
+  id           Int      @id @default(autoincrement())
+  code         String   @db.VarChar(128)
+  batch_code   String?  @db.VarChar(64)
+  warehouse_id String?  @db.VarChar(64)
+  quantity     Int      @default(1)
+  in_time      DateTime @default(now())
+  operator_id  String?  @db.VarChar(64)
+  status       String?  @default("IN_STOCK") @db.VarChar(32)
+  payload      Json?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@index([code])
+  @@index([batch_code])
+  @@index([warehouse_id])
+  @@map("warehouse_in_records")
+}
+
+model PackagingRelation {
+  id              Int      @id @default(autoincrement())
+  parent_code     String   @db.VarChar(128)
+  child_codes     Json
+  packaging_level String   @db.VarChar(32)
+  relation_type   String?  @default("ONE_TO_MANY") @db.VarChar(32)
+  created_by      String?  @db.VarChar(64)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@index([parent_code])
+  @@index([packaging_level])
+  @@map("packaging_relations")
+}
+
+model MarketScan {
+  id            Int      @id @default(autoincrement())
+  code          String   @db.VarChar(128)
+  scan_time     DateTime @default(now())
+  latitude      Decimal? @db.Decimal(10, 6)
+  longitude     Decimal? @db.Decimal(10, 6)
+  scan_location String?  @db.VarChar(255)
+  scan_address  String?  @db.VarChar(255)
+  scanner_type  String?  @db.VarChar(32)
+  scanner_id    String?  @db.VarChar(64)
+  device_id     String?  @db.VarChar(128)
+  ip_address    String?  @db.VarChar(64)
+  payload       Json?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([code])
+  @@index([scan_time])
+  @@index([scanner_type])
+  @@map("market_scans")
+}
+
+model ChannelViolation {
+  id              Int      @id @default(autoincrement())
+  violation_id    String   @unique @db.VarChar(64)
+  code            String   @db.VarChar(128)
+  expected_region String?  @db.VarChar(128)
+  actual_region   String?  @db.VarChar(128)
+  expected_dealer String?  @db.VarChar(128)
+  actual_dealer   String?  @db.VarChar(128)
+  latitude        Decimal? @db.Decimal(10, 6)
+  longitude       Decimal? @db.Decimal(10, 6)
+  scan_time       DateTime
+  confidence      Decimal? @db.Decimal(4, 2)
+  severity        String?  @db.VarChar(32)
+  status          String?  @default("PENDING") @db.VarChar(32)
+  handling_notes  String?  @db.Text
+  payload         Json?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  @@index([code])
+  @@index([status])
+  @@index([scan_time])
+  @@map("channel_violations")
+}
+
+model BlockchainProof {
+  id               Int      @id @default(autoincrement())
+  business_type    String   @db.VarChar(64)
+  business_id      String   @db.VarChar(128)
+  code             String?  @db.VarChar(128)
+  transaction_hash String?  @db.VarChar(128)
+  block_number     String?  @db.VarChar(64)
+  merkle_root      String?  @db.VarChar(128)
+  proof_data       Json?
+  stored_at        DateTime @default(now())
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([business_type, business_id])
+  @@index([code])
+  @@map("blockchain_proofs")
+}
